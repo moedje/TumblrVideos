@@ -1,0 +1,23 @@
+<settings>
+    <category label="General">
+        <setting label="Tumblr API OAuth https://api.tumblr.com/console/calls/user/info" type="lsep"/>
+        <setting id="consumer_key" label="Consumer KEY" values="5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4" enable="false" default="5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4" type="text" visible="true"/>
+        <setting id="consumer_secret" label="Consumer SECRET" values="GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch" default="GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch" type="text" enable="false" visible="true"/>
+        <setting label="API Token and Secret from above Tumblr URL to authorize addon." type="lsep"/>
+        <setting id="oauth_token" label="OAUTH TOKEN" values="" default="" type="text" visible="true"/>
+        <setting id="oauth_secret" label="OAUTH SECRET" values="" default="" type="text" visible="true"/>
+        <setting type="sep"/>
+        <setting id="lastsearch" label="Last Search" values="" default="" type="text" visible="true"/>
+        <setting id="downloadpath" label="Download Path" values="" default="" type="folder" visible="true"/>
+        <setting id="filtertext" label="Filter Text" values="" default="" type="text" visible="true"/>
+        <setting id="lastid" label="Last ID for Dashboard" values="" default="100000000000" type="text" visible="true"/>
+        <setting type="sep"/>
+        <setting id="viewmode" label="Set View $INFO[Container.Viewmode]" values="50" default="50" type="number"
+                 visible="true"/>
+        <setting id="viewmodethumb" label="Set Thumb View" values="0" default="0" type="number"
+                 visible="true"/>
+        <setting id="viewmodelist" label="Set List View" values="0" default="0" type="number"
+                 visible="true"/>
+        <setting id="debugon" label="DEBUG MODE ON" values="false" default="false" type="bool" visible="true"/>
+    </category>
+</settings>
