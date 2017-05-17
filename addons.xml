@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addons>
-<addon id="plugin.video.tumblrv" name="TumblrV" version="0.9.3" provider-name="moedje">
+<addon id="plugin.video.tumblrv" name="TumblrV" version="0.9.4" provider-name="moedje">
   <requires>
     <import addon="xbmc.python" version="2.25.0" />
     <import addon="script.module.kodiswift" version="0.0.8" />
     <import addon="script.module.requests" version="2.9.1" />
+    <import addon="script.module.simple.downloader" optional="true"/>
+    <import addon="script.module.xbmcutil" optional="true"/>
+    <import addon="script.module.urlresolver"  optional="true"/>
     <import addon="script.module.oauth2" />
-    <import addon="script.module.xbmcutil" />
-    <import addon="script.module.urlresolver" />
     <import addon="script.module.youtube.dl" />
   </requires>
   <extension point="xbmc.python.pluginsource" library="addon.py">
@@ -21,6 +22,7 @@
       [COLOR red]https://api.tumblr.com/console/calls/user/info REQUIRED TO GET OAUTH TOKEN TO PUT IN SETTINGS[/COLOR]
       Consumer Key: [B]5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4[/B]
       Consumer Secret: [B]GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch[/B]
+      https://github.com/moedje/TumblrVideos
     </description>
     <disclaimer lang="en">May contain adult content so you must be of legal age in your jurisdiction to use tumblrV to view adult content.</disclaimer>
   </extension>

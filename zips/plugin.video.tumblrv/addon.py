@@ -9,7 +9,7 @@ except:
 tclient = TumblrRestClient
 viewmode = 50
 APIOK = False
-plugin = Plugin()
+plugin = Plugin(name="TumblrV", addon_id="plugin.video.tumblrv", plugin_file="addon.py", info_type="video")
 __addondir__ = xbmc.translatePath(plugin.addon.getAddonInfo('path'))
 __resdir__ = os.path.join(__addondir__, 'resources')
 __imgdir__ = os.path.join(__resdir__, 'images')
@@ -186,6 +186,8 @@ def liked(offset=0):
                     rdate = str(item.get('date', '')).split(' ', 1)[0].strip()
                 litem.set_info(info_type='video', info_labels={'Date': rdate})
                 litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
+                pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
+                litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ])
                 litems.append(litem)
     savetags(alltags)
     return litems
@@ -379,11 +381,27 @@ def dashboard(offset=0):
                     rdate = str(item.get('date', '')).split(' ', 1)[0].strip()
                 litem.set_info(info_type='video', info_labels={'Date': rdate})
                 litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
+                pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
+                litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ])
                 litems.append(litem)
     item = listlikes[-1]
     plugin.set_setting('lastid', str(item.get('id', lastid)))
     savetags(alltags)
     return litems
+
+
+@plugin.route('/download/<urlvideo>')
+def download(urlvideo):
+    try:
+        from YDStreamExtractor import getVideoInfo
+        from YDStreamExtractor import handleDownload
+        info = getVideoInfo(urlvideo, resolve_redirects=True)
+        dlpath = plugin.get_setting('downloadpath')
+        if not os.path.exists(dlpath):
+            dlpath = xbmc.translatePath("home://")
+        handleDownload(info, bg=True, path=dlpath)
+    except:
+        plugin.notify(urlvideo, "Download Failed")
 
 
 @plugin.route('/following/<offset>')
@@ -488,6 +506,8 @@ def blogposts(blogname, offset=0):
                 rdate = str(post.get('date', '')).split(' ', 1)[0].strip()
             litem.set_info(info_type='video', info_labels={'Date': rdate, 'Duration': post.get('duration', '')})
             litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
+            pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
+            litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ])
             litems.append(litem)
     else:
         litems = []
@@ -608,10 +628,18 @@ if __name__ == '__main__':
     viewmode = int(plugin.get_setting('viewmode'))
     plugin.run()
     plugin.set_content(content='movies')
+    viewmodel = 51
+    viewmodet = 500
     if str(plugin.request.path).startswith('/taglist/') or plugin.request.path == '/':
-        viewmode = int(plugin.get_setting('viewmodelist'))
+        viewmodel = int(plugin.get_setting('viewmodelist'))
+        if viewmodel == 0: viewmodel = 51
+        plugin.set_view_mode(viewmodel)
+        #plugin.finish(view_mode=viewmode)
     else:
-        viewmode = int(plugin.get_setting('viewmode'))
+        #plugin.finish(view_mode="thumbnail")
+        #viewmode = int(plugin.get_setting('viewmode'))
         viewmodet = int(plugin.get_setting('viewmodethumb'))
-        if viewmodet > 0: viewmode = viewmodet
-    plugin.set_view_mode(viewmode)
+        if viewmodet == 0: viewmodet = 500
+        plugin.set_view_mode(viewmodet)
+        #if viewmodet > 0: viewmode = viewmodet
+    #plugin.set_view_mode(viewmode)
