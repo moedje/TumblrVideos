@@ -17,21 +17,21 @@ Tumblr will give you back an **OAUTH_TOKEN and OAUTH_SECRET** you need to put th
 ### Features and Status 
 *updated 7 May 2017*
 
--[x] OAuth2 login to Tumblr: Give URL to enter displayed CONSUMER KEY and SECRET to generate OAUTH Token and Secret
--[ ] OAuth2 Can we make this easier to get OAUTH Token and Secret? Within Kodi and not browser?
--[x] Dashboard Video's
--[x] List of Following Blogs
--[x] List of Video's from a blog
--[x] List More/Older Video's from a blog
--[x] Collect TAGS from any video's as you use addon
--[x] List all collected tags and display video's with this tag
--[x] Display Liked Videos
--[ ] Ability to Like/save a video
--[ ] Download A Video
--[ ] Download All Liked/Dash/Category Videos
--[ ] Download based on dates
--[ ] Search Tumblr / Search a Blog / Other types of searches?
--[ ] Handle Picture Posts?
+- [x] OAuth2 login to Tumblr: Give URL to enter displayed CONSUMER KEY and SECRET to generate OAUTH Token and Secret
+- [ ] OAuth2 Can we make this easier to get OAUTH Token and Secret? Within Kodi and not browser?
+- [x] Dashboard Video's
+- [x] List of Following Blogs
+- [x] List of Video's from a blog
+- [x] List More/Older Video's from a blog
+- [x] Collect TAGS from any video's as you use addon
+- [x] List all collected tags and display video's with this tag
+- [x] Display Liked Videos
+- [ ] Ability to Like/save a video
+- [ ] Download A Video
+- [ ] Download All Liked/Dash/Category Videos
+- [ ] Download based on dates
+- [ ] Search Tumblr / Search a Blog / Other types of searches?
+- [ ] Handle Picture Posts?
 
 ## ABOUT ME
 - Author: Jeremy j@alljer.com
