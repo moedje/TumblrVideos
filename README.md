@@ -2,10 +2,13 @@
 ### Kodi/XBMC Addon for Video's on Tumblr
 This is an in development addon to watch and download video's from tumblr blogs.
 
-GayMods RepoKodi Repo for Gay Addons (https://github.com/moedje/kodi-repo-gaymods)
+### GayMods Repo for Kodi/XBMC Gay Adult Addons
+**https://github.com/moedje/kodi-repo-gaymods**
+
 ### REQUIRED TO WORK: OAuth from Tumblr
 You need to authorize the app with Tumblr to your account so we can retrieve your following, liked, dashboard, etc. I do not have an easy way to do this in Kodi yet and I am working on this. For now you have to do this with a browser that you are logged into tumblr simply visit:
-####https://api.tumblr.com/console/calls/user/info
+
+#### https://api.tumblr.com/console/calls/user/info
 Consumer Key: **5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4**
 
 Consumer Secret: **GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch**
@@ -37,4 +40,3 @@ The planned functions for this addon are listed below including the status of wh
 - Author: Jeremy j@alljer.com
 - http://www.2my.cc/ 
 - Founder: [CryptoCoins.Com] Physical CryptoCurrency Worth Holding Onto
-
