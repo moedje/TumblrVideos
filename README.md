@@ -14,9 +14,7 @@ Consumer Key: **5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4**
 Consumer Secret: **GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch**
 
 Tumblr will give you back an **OAUTH_TOKEN and OAUTH_SECRET** you need to put this into the addon's settings and then it will work. If anyone knows how to make this work easier from within Kodi that would be most helpful!!
-### Features 
-The planned functions for this addon are listed below including the status of whether they are completed or not.
-
+### Features and Status 
 *updated 7 May 2017*
 
 -[x] OAuth2 login to Tumblr: Give URL to enter displayed CONSUMER KEY and SECRET to generate OAUTH Token and Secret
