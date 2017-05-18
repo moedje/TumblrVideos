@@ -383,11 +383,22 @@ def dashboard(offset=0):
                 litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
                 pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
                 litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ])
+                pathaddlike = plugin.url_for(endpoint=addlike, id=litem.get('id', ''))
+                litem.add_context_menu_items([('Like', 'RunPlugin({0})'.format(pathaddlike)), ])
                 litems.append(litem)
     item = listlikes[-1]
     plugin.set_setting('lastid', str(item.get('id', lastid)))
     savetags(alltags)
     return litems
+
+
+@plugin.route('/addlike/<id>')
+def addlike(id=0):
+    try:
+        tclient.like(None, id)
+        plugin.notify(msg="LIKED: {0}".format(str(id)))
+    except:
+        plugin.notify(msg="Failed to add like: {0}".format(str(id)))
 
 
 @plugin.route('/download/<urlvideo>')
@@ -427,6 +438,9 @@ def following(offset=0):
             blogres = results.get(results.keys()[-1])
     for b in blogres:
         thumb = __imgtumblr__
+        if len(b.get('name', '')) > 0:
+            name = b.get('name', '')
+            thumb = tclient.avatar(name, 128)
         if b.get('theme', '') is not None:
             theme = b.get('theme', '')
             if theme is not None:
@@ -508,6 +522,8 @@ def blogposts(blogname, offset=0):
             litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
             pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
             litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ])
+            pathaddlike = plugin.url_for(endpoint=addlike, id=post.get('id',''))
+            litem.add_context_menu_items([('Like', 'RunPlugin({0})'.format(pathaddlike)), ])
             litems.append(litem)
     else:
         litems = []
