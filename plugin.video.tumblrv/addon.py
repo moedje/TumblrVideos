@@ -382,9 +382,8 @@ def dashboard(offset=0):
                 litem.set_info(info_type='video', info_labels={'Date': rdate})
                 litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
                 pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
-                litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ])
-                pathaddlike = plugin.url_for(endpoint=addlike, id=litem.get('id', ''))
-                litem.add_context_menu_items([('Like', 'RunPlugin({0})'.format(pathaddlike)), ])
+                pathaddlike = plugin.url_for(endpoint=addlike, id=item.get('id', ''))
+                litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ('Like', 'RunPlugin({0})'.format(pathaddlike)),])
                 litems.append(litem)
     item = listlikes[-1]
     plugin.set_setting('lastid', str(item.get('id', lastid)))
@@ -521,9 +520,8 @@ def blogposts(blogname, offset=0):
             litem.set_info(info_type='video', info_labels={'Date': rdate, 'Duration': post.get('duration', '')})
             litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
             pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
-            litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ])
             pathaddlike = plugin.url_for(endpoint=addlike, id=post.get('id',''))
-            litem.add_context_menu_items([('Like', 'RunPlugin({0})'.format(pathaddlike)), ])
+            litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ('Like', 'RunPlugin({0})'.format(pathaddlike)), ])
             litems.append(litem)
     else:
         litems = []
