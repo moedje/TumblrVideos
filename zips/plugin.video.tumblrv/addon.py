@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import os, sys, ssl, time, datetime, json
 from kodiswift import Plugin, ListItem, xbmc, xbmcgui, xbmcvfs, xbmcaddon, xbmcplugin, xbmcmixin
-from resources.lib import TUMBLRAPI, TUMBLRAUTH, TumblrRestClient, tumblrsearch
+from resources.lib import getoauth, TUMBLRAUTH, TumblrRestClient, tumblrsearch
 try:
     from xbmcutil import viewModes
 except:
     pass
 tclient = TumblrRestClient
-viewmode = 50
+viewmode = 20
 APIOK = False
 plugin = Plugin(name="TumblrV", addon_id="plugin.video.tumblrv", plugin_file="addon.py", info_type="video")
 __addondir__ = xbmc.translatePath(plugin.addon.getAddonInfo('path'))
@@ -35,7 +35,7 @@ def index():
         itemdashvids = {
             'label': 'Dashboard Videos',
             'thumbnail': __imgtumblr__,
-            'path': plugin.url_for(endpoint=dashboard, offset=0),
+            'path': plugin.url_for(endpoint=dashboard, offset=0, lastid=0),
             'is_playable': False}
         itemliked = {
             'label': 'Liked Videos',
@@ -128,14 +128,15 @@ def liked(offset=0):
     #setview_thumb()
     likes = {}
     alltags = []
+    litems = []
     listlikes = []
-    strpage = str(((int(offset) + 100) / 100))
+    strpage = str(((int(offset) + 20) / 20))
     nextitem = ListItem(label="Next Page -> #{0}".format(int(strpage) + 1), label2="Liked Videos", icon=__imgnext__,
-                        thumbnail=__imgnext__, path=plugin.url_for(liked, offset=int(100 + int(offset))))
+                        thumbnail=__imgnext__, path=plugin.url_for(liked, offset=int(20 + int(offset))))
     nextitem.set_art({'poster': __imgnext__, 'thumbnail': __imgnext__, 'fanart': __imgnext__})
     nextitem.is_folder = True
-    litems = [nextitem]
-    results = tclient.likes(limit=100, offset=int(offset))
+    #litems = [nextitem]
+    results = tclient.likes(limit=20, offset=int(offset))
     if results is not None:
         if results.get('liked_posts', '') is not None:
             listlikes = results.get('liked_posts', '')
@@ -190,6 +191,7 @@ def liked(offset=0):
                 litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ])
                 litems.append(litem)
     savetags(alltags)
+    litems.append(nextitem)
     return litems
 
 
@@ -214,11 +216,11 @@ def setview_list():
                                                            str(plugin.get_setting('viewmodethumb'))))
     try:
         if int(plugin.get_setting('viewmodelist')) == 0:
-            viewselector = viewModes.Selector(50)
+            viewselector = viewModes.Selector(20)
             viewmode = viewselector.currentMode
             plugin.set_setting('viewmodelist', viewmode)
     except:
-        plugin.set_setting('viewmodelist', 50)
+        plugin.set_setting('viewmodelist', 20)
     plugin.notify(msg="{0} View: {1} / L{2} / T{3}".format(str(plugin.request.path), str(plugin.get_setting('viewmode')),
                                                            str(plugin.get_setting('viewmodelist')),
                                                            str(plugin.get_setting('viewmodethumb'))))
@@ -243,6 +245,7 @@ def setview_thumb():
 def tags(tagname='', timestamp=0):
     atags = {}
     taglist = []
+    litems = []
     if tagname == '0':
         tagname = plugin.keyboard(plugin.get_setting('lastsearch'), 'Search for tags')
         plugin.set_setting('lastsearch', tagname)
@@ -252,7 +255,7 @@ def tags(tagname='', timestamp=0):
                         thumbnail=__imgnext__, path=plugin.url_for(tags, tagname=tagname, timestamp=nstamp))
     nextitem.set_art({'poster': __imgnext__, 'thumbnail': __imgnext__, 'fanart': __imgnext__})
     nextitem.is_folder = True
-    litems = [nextitem]
+    #litems = [nextitem]
     if tagname is not None and len(tagname) > 0:
         results = tclient.tagged(tagname, filter='text') #), before=float(timestamp))
         if results is not None:
@@ -302,25 +305,27 @@ def tags(tagname='', timestamp=0):
                 litem.set_info(info_type='video', info_labels={'Date': rdate})
                 litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
                 litems.append(litem)
+    litems = [nextitem]
     return litems
 
 
-@plugin.route('/dashboard/<offset>')
-def dashboard(offset=0):
+@plugin.route('/dashboard/<lastid>/<offset>')
+def dashboard(lastid=0, offset=0):
     #setview_thumb()
     likes = {}
     listlikes = []
     litems = []
-    strpage = str(((int(offset) + 100) / 100))
+    strpage = str(((int(offset) + 20) / 20))
     # results = tclient.dashboard(offset=offset, limit=100)
-    lastid = 160600000000
     lastid = plugin.get_setting('lastid', int)
+    if lastid == 0:
+        lastid = 10000000000
     if lastid is None or lastid < 1000000:
-        lastid = 160600000000
-    results = tclient.dashboard(limit=100, offset=0, type='video', since_id=lastid)
-    # nextitem = ListItem(label="Next Page -> #{0}".format(int(strpage)+1), label2="Liked Videos", icon=__imgnext__, thumbnail=__imgnext__, path=plugin.url_for(dashboard, offset=int(100 + int(offset))))
-    # nextitem.set_art({'poster': __imgnext__, 'thumbnail': __imgnext__, 'fanart': __imgnext__})
-    # nextitem.is_folder = True
+        lastid = 10000000000
+    results = tclient.dashboard(limit=20, offset=offset, type='video', since_id=lastid)
+    nextitem = ListItem(label="Next Page -> #{0}".format(int(strpage)+1), label2="Liked Videos", icon=__imgnext__, thumbnail=__imgnext__, path=plugin.url_for(dashboard, offset=int(20+int(offset)), lastid=lastid))
+    nextitem.set_art({'poster': __imgnext__, 'thumbnail': __imgnext__, 'fanart': __imgnext__})
+    nextitem.is_folder = True
     # litems = [nextitem]
     litems = []
     alltags = []
@@ -388,6 +393,7 @@ def dashboard(offset=0):
     item = listlikes[-1]
     plugin.set_setting('lastid', str(item.get('id', lastid)))
     savetags(alltags)
+    litems.append(nextitem)
     return litems
 
 
@@ -414,56 +420,84 @@ def download(urlvideo):
         plugin.notify(urlvideo, "Download Failed")
 
 
+def following_list(offset=0, max=0):
+    litems = []
+    offset = 0
+    total = 0
+    resp = tclient.following(offset=offset, limit=20)  # tclient.dashboard(type='videos')
+    if max == 0:
+        total = int(resp.get('total_blogs', 0))
+        if total > 150: total = 150
+    else:
+        total = 20 + max
+    results = resp.get('response', {})
+    if results is not None:
+        blogres = results.get('blogs', [])
+        for blog in blogres:
+            blog['updated'] = datetime.datetime.fromtimestamp(blog.get('updated'), 0).isoformat()
+            litems.append(blog)
+        try:
+            for offnum in range(len(blogres), total, 20):
+                newblogs = []
+                newres = tclient.following(offset=offnum, limit=20)
+                newblogs = newres.get('blogs', [])
+                if len(newblogs) > 0:
+                    for blog in newblogs:
+                        blog['updated'] = datetime.datetime.fromtimestamp(blog['updated']).isoformat()
+                        litems.append(blog)
+        except:
+            pass
+    items = sorted(litems, key=lambda litems: litems['updated'])
+    #plugin.notify(msg="Following: {0} Total: {1} Len: {2}".format(str(len(resp.get('blogs',[]))), str(total), str(len(litems))))
+    return items
+
+
 @plugin.route('/following/<offset>')
 def following(offset=0):
     blogs = {}
     litems = []
     blogres = []
     listblogs = []
+    litems = []
     name = ''
+    updated = ''
     url = ''
     desc = ''
-    strpage = str(((int(offset) + 100) / 100))
+    strpage = str(((int(offset) + 50) / 50))
     nextitem = ListItem(label="Next Page -> #{0}".format(int(strpage) + 1), label2="More", icon=__imgnext__,
-                        thumbnail=__imgnext__, path=plugin.url_for(following, offset=int(100 + int(offset))))
+                        thumbnail=__imgnext__, path=plugin.url_for(following, offset=int(50 + int(offset))))
     nextitem.set_art({'poster': __imgnext__, 'thumbnail': __imgnext__, 'fanart': __imgnext__})
     nextitem.is_folder = True
-    litems = [nextitem]
-    results = tclient.following(offset=offset, limit=50)  # tclient.dashboard(type='videos')
-    if results is not None:
-        if results.get('blogs', '') is not None:
-            blogres = results.get('blogs', '')
-        else:
-            blogres = results.get(results.keys()[-1])
-    for b in blogres:
+    #litems = [nextitem]
+    results = following_list(offset=offset) # max not working right now, max=50)
+    for b in results:
         thumb = __imgtumblr__
-        if len(b.get('name', '')) > 0:
-            name = b.get('name', '')
-            thumb = tclient.avatar(name, 128)
-        if b.get('theme', '') is not None:
-            theme = b.get('theme', '')
-            if theme is not None:
-                if theme.get('header_image_scaled', ''):
-                    thumb = theme.get('header_image_scaled', '')  # '.Theme(**b['theme']) # Theme(**b['theme'])
         try:
+            thumbd = {}
+            name = b.get('name', '')
             title = b.get('title', '')
             desc = b.get('description', '')
-            url = b.get('url', '')
-            if len(b.get('name', '')) > 0:
-                name = b.get('name', '')
-            elif len(b.get('url', '')) > 0:
-                name = b.get('url', '')
-                name = name.split('.tumblr.com', 1)[0]
-                name = name.split('://', 1)[-1]
+            url = b.get('url', "http://{0}.tumblr.com".format(name))
+            updated = b.get('updated', '')
+            thumbd = tclient.avatar(name, 128)
+            if len(thumbd.keys()) > 0:
+                thumb = thumbd[thumbd.keys()[0]]
+            if len(thumb) < 1:
+                if len(b.get('theme', '{}')) > 0:
+                    theme = b.get('theme', '{}')
+                    if len(theme.get('header_image_scaled', '')) > 0: thumb = theme.get('header_image_scaled', '')
+            iurl = plugin.url_for(endpoint=blogposts, blogname=name, offset=0)
+            lbl = "{0}\n{1}".format(name, title.encode('latin-1', 'ignore'))
+            lbl2 = desc.encode('latin-1', 'ignore')
+            litem = ListItem(label=lbl, label2=lbl2, icon=thumb, thumbnail=thumb, path=iurl)
+            litem.set_art({'poster': thumb, 'thumbnail': thumb, 'fanart': thumb})
+            litem.is_folder = True
+            litem.playable = False
+            litems.append(litem)
         except:
             pass
-        iurl = plugin.url_for(endpoint=blogposts, blogname=name, offset=0)
-        lbl2 = "{0} - {1}".format(desc.encode('latin-1', 'ignore'), url.encode('latin-1', 'ignore'))
-        litem = ListItem(label=name, label2=lbl2, icon=thumb, thumbnail=thumb, path=iurl)
-        litem.set_art({'poster': thumb, 'thumbnail': thumb, 'fanart': thumb})
-        litem.is_folder = True
-        litem.playable = False
-        litems.append(litem)
+    #items = sorted(litems, key=lambda litems: litems.label2)
+    # litems.append(nextitem) NO NEXT PAGE TODO: Make max work and paginate results as this is slow
     return litems
 
 
@@ -475,18 +509,19 @@ def blogposts(blogname, offset=0):
     vidurl = ''
     results = []
     alltags = []
+    litems = []
     if blogname.find('.') != -1:
         shortname = blogname.split('.', 1)[-1]
         if shortname.find('.') != -1:
             blogname = shortname.lsplit('.')[0]
-    strpage = str((50 + int(offset)) / 50)
+    strpage = str((20 + int(offset)) / 20)
     nextitem = ListItem(label="Next Page -> #{0}".format(strpage), label2=blogname, icon=__imgnext__,
                         thumbnail=__imgnext__,
-                        path=plugin.url_for(blogposts, blogname=blogname, offset=int(50 + int(offset))))
+                        path=plugin.url_for(blogposts, blogname=blogname, offset=int(20 + int(offset))))
     nextitem.set_art({'poster': __imgnext__, 'thumbnail': __imgnext__, 'fanart': __imgnext__})
     nextitem.is_folder = True
-    litems = [nextitem]
-    results = tclient.posts(blogname=blogname, limit=50, offset=int(offset), type='video')
+    #litems = [nextitem]
+    results = tclient.posts(blogname=blogname, limit=20, offset=int(offset), type='video')
     if results is not None:
         if len(results.get('posts', '')) > 1:
             results = results.get('posts', '')
@@ -529,13 +564,14 @@ def blogposts(blogname, offset=0):
         if offset == 0:
             backurl = plugin.url_for(endpoint=following, offset=0)
         else:
-            backurl = plugin.url_for(blogposts, blogname=blogname, offset=(int(offset) - 50))
+            backurl = plugin.url_for(blogposts, blogname=blogname, offset=(int(offset) - 20))
         nextitem = ListItem(label="No Results - GO BACK".format(strpage), label2=blogname, icon=__imgtumblr__,
                             thumbnail=__imgtumblr__, path=backurl)
         nextitem.set_art({'poster': __imgtumblr__, 'thumbnail': __imgtumblr__, 'fanart': __imgtumblr__})
         nextitem.is_folder = True
         litems = [nextitem]
     savetags(alltags)
+    litems.append(nextitem)
     return litems
 
 
@@ -552,24 +588,29 @@ def search():
     searchtxt = plugin.keyboard(searchtxt, 'Search All Sites', False)
     searchquery = searchtxt.replace(' ', '+')
     plugin.set_setting(key='lastsearch', val=searchtxt)
-    results = tclient.following(limit=100, offset=offsetnum)
-    if results is not None:
-        if results.get('response', ''):
-            results = results.get('response', '')
-        if results.get('blogs', ''):
-            results = results.get('blogs', '')
+    results = following_list(offset=offsetnum)
     listmatch = []
-    max = 100
-    if len(results) < 100:
-        max = len(results) - 1
-    for blog in results[0:max]:
-        if blog.get('blog_name', ''):
-            name = blog.get('blog_name', '')
-            listmatch.append(tumblrsearch.search(searchquery.split(' '), tclient, name))
+    max = 20
+    #if len(results) < 20:
+    #    max = len(results) - 1
+    for blog in results:
+        name = blog.get('name', '')
+        posts = tclient.posts(name, type='video')
+        for post in posts.get('posts', []):
+            for k,v in post.items():
+                try:
+                    if searchquery.lower() in str(v.encode('latin-1', 'ignore')).lower():
+                        listmatch.append(post)
+                        break
+                except:
+                    pass
+    plugin.notify(msg="Matches: {0}".format(str(len(listmatch))))
     for post in listmatch:
         if post.get('type', '') == 'video':
+            vidurl = ""
+            rdate = ""
             try:
-                lbl2 = post.get('blog_name', '')
+                lbl2 = post.get('name', '')
                 if post.get('slug', '') is not None:
                     lbl = post.get('slug', '').replace('-', ' ')
                 if len(post.get('caption', '')) > 0:
@@ -625,20 +666,28 @@ if __name__ == '__main__':
             APIOK = False
     except:
         APIOK = False
-        try:  # Try an old style API key from off github as a backup so some functionality is provided?
-            TUMBLRAUTH = dict(consumer_key='5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4',
-                 consumer_secret='GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch',
-                 oauth_token='RBesLWIhoxC1StezFBQ5EZf7A9EkdHvvuQQWyLpyy8vdj8aqvU',
-                 oauth_secret='GQAEtLIJuPojQ8fojZrh0CFBzUbqQu8cFH5ejnChQBl4ljJB4a')
-            TUMBLRAUTH.update({'api_key', 'fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4'})
+        try:
+            TUMBLRAUTH = getoauth()
             tclient = TumblrRestClient(**TUMBLRAUTH)
+            info = tclient.info()
+            if info is not None and info.get('user', None) is not None:
+                APIOK = True
+            else:
+                APIOK = False
         except:
-            pass
-        plugin.notify(
-            msg="Required Tumblr OAUTH token and secret missing. Check Settings for instructions to authorize Addon in Tumblr",
-            title="Your Tumblr Details Missing", delay=10000)
-        plugin.log.error(
-            msg="Tumblr API OAuth settings invalid. This addon requires you to authorize this Addon in your Tumblr account and in turn in the settings you must provide the TOKEN and SECRET that Tumblr returns.\nhttps://api.tumblr.com/console/calls/user/info\n\tUse the Consumer Key and Secret from the addon settings to authorize this addon and the OAUTH Token and Secret the website returns must be put into the settings.")
+            plugin.notify(
+                msg="Required Tumblr OAUTH token missing..Backup plan!",
+                title="Tumblr Login Failed", delay=10000)
+            plugin.log.error(msg="Tumblr API OAuth settings invalid. This addon requires you to authorize this Addon in your Tumblr account and in turn in the settings you must provide the TOKEN and SECRET that Tumblr returns.\nhttps://api.tumblr.com/console/calls/user/info\n\tUse the Consumer Key and Secret from the addon settings to authorize this addon and the OAUTH Token and Secret the website returns must be put into the settings.")
+            try:  # Try an old style API key from off github as a backup so some functionality is provided?
+                TUMBLRAUTH = dict(consumer_key='5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4',
+                     consumer_secret='GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch',
+                     oauth_token='RBesLWIhoxC1StezFBQ5EZf7A9EkdHvvuQQWyLpyy8vdj8aqvU',
+                     oauth_secret='GQAEtLIJuPojQ8fojZrh0CFBzUbqQu8cFH5ejnChQBl4ljJB4a')
+                TUMBLRAUTH.update({'api_key', 'fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4'})
+                tclient = TumblrRestClient(**TUMBLRAUTH)
+            except:
+                plugin.notify(msg="Read Settings for instructions", title="COULDN'T AUTH TO TUMBLR")
     viewmode = int(plugin.get_setting('viewmode'))
     plugin.run()
     plugin.set_content(content='movies')
@@ -648,12 +697,7 @@ if __name__ == '__main__':
         viewmodel = int(plugin.get_setting('viewmodelist'))
         if viewmodel == 0: viewmodel = 51
         plugin.set_view_mode(viewmodel)
-        #plugin.finish(view_mode=viewmode)
     else:
-        #plugin.finish(view_mode="thumbnail")
-        #viewmode = int(plugin.get_setting('viewmode'))
         viewmodet = int(plugin.get_setting('viewmodethumb'))
         if viewmodet == 0: viewmodet = 500
         plugin.set_view_mode(viewmodet)
-        #if viewmodet > 0: viewmode = viewmodet
-    #plugin.set_view_mode(viewmode)

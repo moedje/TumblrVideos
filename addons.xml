@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addons>
-<addon id="plugin.video.tumblrv" name="TumblrV" version="0.9.5" provider-name="moedje">
+<addon id="plugin.video.tumblrv" name="TumblrV" version="0.9.6" provider-name="moedje">
   <requires>
     <import addon="xbmc.python" version="2.25.0" />
     <import addon="script.module.kodiswift" version="0.0.8" />
@@ -18,7 +18,7 @@
     <platform>all</platform>
     <language>en</language>
     <summary lang="en">plugin.video.tumblrV Kodi/XBMC Addon for watching Videos from Tumblr</summary>
-    <description lang="en">V0.9.5: Added Download Video with YouTube-DL and added LIKE video, and improved loading of Blog's thumbnail image/avatar. V0.9.3: First public preview most features working. http://www.github.com/moedje/ Read the instructions about how to get your OAUTH_TOKEN and OAUTH_SECRET from Tumblr. It is required to login to Tumblr from an external App like this one. [COLOR red]YOU must put your OAUTH Token and Secret in settings[/COLOR] This will not work if you do not visit below Tumblr URL and put this App's Consumer Key and Secret in to generate an OAUTH token!
+    <description lang="en">V0.9.6: First attempt at new OAuth Token retrieving. Search works but needs lots of work, following retrieves all, dashboard can paginate now. V0.9.5: Added Download Video with YouTube-DL and added LIKE video, and improved loading of Blog's thumbnail image/avatar. V0.9.3: First public preview most features working. http://www.github.com/moedje/ Read the instructions about how to get your OAUTH_TOKEN and OAUTH_SECRET from Tumblr. It is required to login to Tumblr from an external App like this one. [COLOR red]YOU must put your OAUTH Token and Secret in settings[/COLOR] This will not work if you do not visit below Tumblr URL and put this App's Consumer Key and Secret in to generate an OAUTH token!
       [COLOR red]https://api.tumblr.com/console/calls/user/info REQUIRED TO GET OAUTH TOKEN TO PUT IN SETTINGS[/COLOR]
       Consumer Key: [B]5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4[/B]
       Consumer Secret: [B]GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch[/B]
