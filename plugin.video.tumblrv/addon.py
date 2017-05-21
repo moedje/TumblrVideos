@@ -2,11 +2,15 @@
 import os, sys, ssl, time, datetime, json
 from kodiswift import Plugin, ListItem, xbmc, xbmcgui, xbmcvfs, xbmcaddon, xbmcplugin, xbmcmixin
 from resources.lib import getoauth, TUMBLRAUTH, TumblrRestClient, tumblrsearch
+from resources.lib.pytumblr.models import Post, Posts, Blog, Blogs, Following, Dashboard, Likes, PostType
 try:
     from xbmcutil import viewModes
 except:
     pass
-tclient = TumblrRestClient
+tclient = TumblrRestClient(**{'consumer_secret': 'GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch',
+                              'oauth_token': 'WzBSLsoXmOvd9UPvhZ0pUyBaIZvuciEybSRCeFG0oovLtJGcyx',
+                              'consumer_key': '5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4',
+                              'oauth_secret': '5cJJhCZO99TGqzz9Qbpwprc0dakky4MbTOKblNbjLQFS2ne2Rb'})
 viewmode = 20
 APIOK = False
 plugin = Plugin(name="TumblrV", addon_id="plugin.video.tumblrv", plugin_file="addon.py", info_type="video")
@@ -137,13 +141,15 @@ def liked(offset=0):
     nextitem.is_folder = True
     #litems = [nextitem]
     results = tclient.likes(limit=20, offset=int(offset))
-    if results is not None:
-        if results.get('liked_posts', '') is not None:
-            listlikes = results.get('liked_posts', '')
-        else:
-            listlikes = results.get(results.keys()[-1])
-    for item in listlikes:
-        if item.get('type', '') == 'video':
+    #if results is not None:
+    #    if results.get('liked_posts', '') is not None:
+    #        listlikes = results.get('liked_posts', '')
+    #    else:
+    #        listlikes = results.get(results.keys()[-1])
+    for item in results.posts: #listlikes:
+        assert isinstance(item, Post)
+        if item.type_property == PostType.VIDEO:
+        #if item.get('type', '') == 'video':
             b = {}
             b.update(item)
             lbl = ""
@@ -342,18 +348,38 @@ def dashboard(lastid=0, offset=0):
                 listlikes = []
         else:
             listlikes = results.get(results.keys()[-1])
-    for item in listlikes:
-        if item.get('type', '') == 'video':
+    for item in results.posts: # listlikes:
+        assert isinstance(item, Post)
+        if item.type_property == PostType.VIDEO: #item.get('type', '') == 'video':
             b = item
             img = __imgtumblr__
-            alltags.extend(item.get('tags', []))
-            if 'thumb' in str(item.keys()[:]):
-                if item.get('thumbnail_url', '') is not None:
-                    img = item.get('thumbnail_url', '')  # .replace('https', 'http') #item.get('thumbnail_url','')
-            elif 'image' in str(item.keys()[:]):
-                if item.get('image_permalink', ""):
-                    img = item.get('image_permalink', "")
+            alltags.extend(item.tags) #.get('tags', []))
+            #if 'thumb' in str(item.keys()[:]):
+            #    if item.get('thumbnail_url', '') is not None:
+            #        img = item.get('thumbnail_url', '')  # .replace('https', 'http') #item.get('thumbnail_url','')
+            #elif 'image' in str(item.keys()[:]):
+            #    if item.get('image_permalink', ""):
+            #        img = item.get('image_permalink', "")
+            if len(item.thumbnail_url) > 0:
+                img = item.thumbnail_url
+            elif len(item['image_permalink']) > 0:
+                img = item['image_permalink']
+            else:
+                img = item.display_avatar
             try:
+                if len(item.slug) > 0:
+                    lbl = item.slug
+                elif len(item.caption) > 0:
+                    lbl = item.caption
+                elif len(item.summary) > 0:
+                    lbl = item.summary
+                else:
+                    lbl = item.short_url
+                if len(item.summary) > 0:
+                    lbl2 = item.summary
+                else:
+                    lbl2 = item.name + " / " + item.caption + "(" + item.slug + ")"
+                """
                 if len(b.get('slug', '')) > 0:
                     lbl = b.get('slug', '')
                 elif len(b.get('title', '')) > 0:
@@ -371,27 +397,34 @@ def dashboard(lastid=0, offset=0):
                 else:
                     lbl2 = item.get('blog_name', '') + " / " + item.get('source_title', '') + "(" + item.get(
                         'slug_name', '') + ")"
+                """
             except:
-                lbl = b.get('blog_name', '')
-                lbl2 = b.get('short_url', '')
-            img = item.get('thumbnail_url', '')
-            vidurl = item.get('video_url', '')
+                lbl = item.name #b.get('blog_name', '')
+                lbl2 = item.short_url #b.get('short_url', '')
+            img = item.thumbnail_url # item.get('thumbnail_url', '')
+            vidurl = item.video_url # item.get('video_url', '')
             if vidurl is not None and len(vidurl) > 10:
-                if len(b.get('caption', '')) > 0:
-                    lbl = Strip(b.get('caption', ''))
+                if len(item.caption) > 0:
+                    lbl = Strip(item.caption)
                 litem = ListItem(label=lbl, label2=lbl2, icon=img, thumbnail=img, path=vidurl)
                 litem.playable = True
                 litem.is_folder = False
-                if item.get('date', '') is not None:
-                    rdate = str(item.get('date', '')).split(' ', 1)[0].strip()
+                if item.date is not None:
+                    rdate = str(item.date).split(' ', 1)[0].strip()
                 litem.set_info(info_type='video', info_labels={'Date': rdate})
                 litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
                 pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
                 pathaddlike = plugin.url_for(endpoint=addlike, id=item.get('id', ''))
                 litem.add_context_menu_items([('Download', 'RunPlugin({0})'.format(pathdl)), ('Like', 'RunPlugin({0})'.format(pathaddlike)),])
                 litems.append(litem)
-    item = listlikes[-1]
-    plugin.set_setting('lastid', str(item.get('id', lastid)))
+    item = listlikes[0]
+    assert isinstance(item, Post)
+    id = 0
+    if item.id is not None:
+        id = item.id
+    elif item.id_property is not None:
+        id = item.id_property
+    plugin.set_setting('lastid', str(id)) #item.get('id', lastid)))
     savetags(alltags)
     litems.append(nextitem)
     return litems
@@ -654,40 +687,14 @@ def Strip(text):
 
 
 if __name__ == '__main__':
-    try:
-        otoken = plugin.get_setting('oauth_token')
-        osecret = plugin.get_setting('oauth_secret')
-        TUMBLRAUTH.update({'oauth_token': otoken, 'oauth_secret': osecret})
-        tclient = TumblrRestClient(**TUMBLRAUTH)
-        info = tclient.info()
-        if info is not None and 'user' in info.keys():
-            APIOK = True
-        else:
-            APIOK = False
-    except:
+    info = tclient.info()
+    if info is not None and info.get('user', None) is not None:
+        APIOK = True
+    else:
+        plugin.notify(
+            msg="Required Tumblr OAUTH token missing..Backup plan!",
+            title="Tumblr Login Failed", delay=10000)
         APIOK = False
-        try:
-            TUMBLRAUTH = getoauth()
-            tclient = TumblrRestClient(**TUMBLRAUTH)
-            info = tclient.info()
-            if info is not None and info.get('user', None) is not None:
-                APIOK = True
-            else:
-                APIOK = False
-        except:
-            plugin.notify(
-                msg="Required Tumblr OAUTH token missing..Backup plan!",
-                title="Tumblr Login Failed", delay=10000)
-            plugin.log.error(msg="Tumblr API OAuth settings invalid. This addon requires you to authorize this Addon in your Tumblr account and in turn in the settings you must provide the TOKEN and SECRET that Tumblr returns.\nhttps://api.tumblr.com/console/calls/user/info\n\tUse the Consumer Key and Secret from the addon settings to authorize this addon and the OAUTH Token and Secret the website returns must be put into the settings.")
-            try:  # Try an old style API key from off github as a backup so some functionality is provided?
-                TUMBLRAUTH = dict(consumer_key='5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4',
-                     consumer_secret='GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch',
-                     oauth_token='RBesLWIhoxC1StezFBQ5EZf7A9EkdHvvuQQWyLpyy8vdj8aqvU',
-                     oauth_secret='GQAEtLIJuPojQ8fojZrh0CFBzUbqQu8cFH5ejnChQBl4ljJB4a')
-                TUMBLRAUTH.update({'api_key', 'fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4'})
-                tclient = TumblrRestClient(**TUMBLRAUTH)
-            except:
-                plugin.notify(msg="Read Settings for instructions", title="COULDN'T AUTH TO TUMBLR")
     viewmode = int(plugin.get_setting('viewmode'))
     plugin.run()
     plugin.set_content(content='movies')
@@ -701,3 +708,40 @@ if __name__ == '__main__':
         viewmodet = int(plugin.get_setting('viewmodethumb'))
         if viewmodet == 0: viewmodet = 500
         plugin.set_view_mode(viewmodet)
+    if not APIOK:
+        try:
+            otoken = plugin.get_setting('oauth_token')
+            osecret = plugin.get_setting('oauth_secret')
+            TUMBLRAUTH.update(**getoauth()) #{'oauth_token': otoken, 'oauth_secret': osecret})
+            xbmc.log.debug(str(TUMBLRAUTH))
+            tclient = TumblrRestClient(**{'consumer_secret': 'GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch', 'oauth_token': 'WzBSLsoXmOvd9UPvhZ0pUyBaIZvuciEybSRCeFG0oovLtJGcyx', 'consumer_key': '5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4', 'oauth_secret': '5cJJhCZO99TGqzz9Qbpwprc0dakky4MbTOKblNbjLQFS2ne2Rb'})
+            info = tclient.info()
+            if info is not None and 'user' in info.keys():
+                APIOK = True
+            else:
+                APIOK = False
+        except:
+            APIOK = False
+            try:
+                TUMBLRAUTH = getoauth()
+                tclient = TumblrRestClient(**TUMBLRAUTH)
+                info = tclient.info()
+                if info is not None and info.get('user', None) is not None:
+                    APIOK = True
+                else:
+                    APIOK = False
+            except:
+                plugin.notify(
+                    msg="Required Tumblr OAUTH token missing..Backup plan!",
+                    title="Tumblr Login Failed", delay=10000)
+                plugin.log.error(msg="Tumblr API OAuth settings invalid. This addon requires you to authorize this Addon in your Tumblr account and in turn in the settings you must provide the TOKEN and SECRET that Tumblr returns.\nhttps://api.tumblr.com/console/calls/user/info\n\tUse the Consumer Key and Secret from the addon settings to authorize this addon and the OAUTH Token and Secret the website returns must be put into the settings.")
+                try:  # Try an old style API key from off github as a backup so some functionality is provided?
+                    TUMBLRAUTH = {'consumer_secret': 'GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch', 'oauth_token': 'WzBSLsoXmOvd9UPvhZ0pUyBaIZvuciEybSRCeFG0oovLtJGcyx', 'consumer_key': '5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4', 'oauth_secret': '5cJJhCZO99TGqzz9Qbpwprc0dakky4MbTOKblNbjLQFS2ne2Rb'}
+                    TUMBLRAUTH2 = dict(consumer_key='5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4',
+                         consumer_secret='GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch',
+                         oauth_token='RBesLWIhoxC1StezFBQ5EZf7A9EkdHvvuQQWyLpyy8vdj8aqvU',
+                         oauth_secret='GQAEtLIJuPojQ8fojZrh0CFBzUbqQu8cFH5ejnChQBl4ljJB4a')
+                    TUMBLRAUTH.update({'api_key', 'fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4'})
+                    tclient = TumblrRestClient(**TUMBLRAUTH)
+                except:
+                    plugin.notify(msg="Read Settings for instructions", title="COULDN'T AUTH TO TUMBLR")

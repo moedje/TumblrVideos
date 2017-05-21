@@ -1,12 +1,16 @@
 from helpers import validate_params, validate_blogname
 from request import TumblrRequest
+from models.Post import  Post, Posts, Player, Reblog, PostType, Sizes, Exif, Photo
+from models.Blog import Blog, Blogs, Theme, Trail
+from models.Following import Following
+from models.Dashboard import Dashboard
+from models.Likes import Likes
 
 
 class TumblrRestClient(object):
     """
     A Python Client for the Tumblr API
     """
-
     def __init__(self, consumer_key, consumer_secret="", oauth_token="", oauth_secret="", host="https://api.tumblr.com",proxy_url=None):
         """
         Initializes the TumblrRestClient object, creating the TumblrRequest
@@ -25,6 +29,12 @@ class TumblrRestClient(object):
 
         :returns: None
         """
+        self._dash = Posts([])
+        self._postlist = Posts([])
+        self._following = Following([])
+        self._likes = Likes([])
+        self._dashboard = Dashboard([])
+        self._posts = Posts([])
         self.request = TumblrRequest(consumer_key, consumer_secret, oauth_token, oauth_secret, host,proxy_url=proxy_url)
 
     def info(self):
@@ -58,20 +68,31 @@ class TumblrRestClient(object):
 
         :returns: A dict created from the JSON response
         """
-        return self.send_api_request("get", "/v2/user/likes", kwargs, ["limit", "offset"])
+        try:
+            results = self.send_api_request("get", "/v2/user/likes", kwargs, ["limit", "offset"])
+            postlist = results.get('response', {}).get('liked_posts', [])
+            self._likes = Likes(postlist)
+            return self._likes
+        except:
+            return self.send_api_request("get", "/v2/user/likes", kwargs, ["limit", "offset"])
+
 
     def following(self, **kwargs):
         """
         Gets the blogs that the current user is following.
         :param limit: an int, the number of likes you want returned
         :param offset: an int, the blog you want to start at, for pagination.
-
-            # Start at the 20th blog and get 20 more blogs.
-            client.following({'offset': 20, 'limit': 20})
-
+        
+        # Start at the 20th blog and get 20 more blogs. client.following({'offset': 20, 'limit': 20})
         :returns: A dict created from the JSON response
         """
-        return self.send_api_request("get", "/v2/user/following", kwargs, ["limit", "offset"])
+        try:
+            results = self.send_api_request("get", "/v2/user/following", kwargs, ["limit", "offset"])
+            bloglist = results.get('response', {}).get('blogs', [])
+            self._following = Following(bloglist)
+            return self._following
+        except:
+            return self.send_api_request("get", "/v2/user/following", kwargs, ["limit", "offset"])
 
     def dashboard(self, **kwargs):
         """
@@ -86,7 +107,13 @@ class TumblrRestClient(object):
 
         :returns: A dict created from the JSON response
         """
-        return self.send_api_request("get", "/v2/user/dashboard", kwargs, ["limit", "offset", "type", "since_id", "reblog_info", "notes_info"])
+        try:
+            results = self.send_api_request("get", "/v2/user/dashboard", kwargs, ["limit", "offset", "type", "since_id", "reblog_info", "notes_info"])
+            postlist = results.get('response', {})
+            self._dashboard = Dashboard(postlist.get('posts', []), **postlist)
+            return self._dashboard
+        except:
+            return self.send_api_request("get", "/v2/user/dashboard", kwargs, ["limit", "offset", "type", "since_id", "reblog_info", "notes_info"])
 
     def tagged(self, tag, **kwargs):
         """
@@ -125,7 +152,13 @@ class TumblrRestClient(object):
             url = '/v2/blog/{0}/posts'.format(blogname)
         else:
             url = '/v2/blog/{0}/posts/{1}'.format(blogname,type)
-        return self.send_api_request("get", url, kwargs, ['id', 'tag', 'limit', 'offset', 'reblog_info', 'notes_info', 'filter', 'api_key'], True)
+        try:
+            results = self.send_api_request("get", url, kwargs, ['id', 'tag', 'limit', 'offset', 'reblog_info', 'notes_info', 'filter', 'api_key'], True)
+            postlist = results.get("response", {}).get('posts', [])
+            self._posts = Posts(postlist) # [Post(**post) for post in posts]
+            return self._posts
+        except:
+            return self.send_api_request("get", url, kwargs, ['id', 'tag', 'limit', 'offset', 'reblog_info', 'notes_info', 'filter', 'api_key'], True)
     
     @validate_blogname
     def blog_info(self, blogname):
@@ -536,3 +569,4 @@ class TumblrRestClient(object):
             return self.request.get(url, params)
         else:
             return self.request.post(url, params, files)
+
