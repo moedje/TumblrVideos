@@ -605,37 +605,42 @@ def search():
                 except:
                     pass
     plugin.notify(msg="Matches: {0}".format(str(len(listmatch))))
+    alltags = []
     for post in listmatch:
-        if post.get('type', '') == 'video':
-            vidurl = ""
-            rdate = ""
-            try:
-                lbl2 = post.get('name', '')
-                if post.get('slug', '') is not None:
-                    lbl = post.get('slug', '').replace('-', ' ')
-                if len(post.get('caption', '')) > 0:
-                    lbl = Strip(post.get('caption', ''))
-                elif len(post.get('summary', '')) > 0:
-                    lbl = post.get('summary', '')
-                elif len(post.get('source_title', '')) > 0:
-                    lbl = post.get('source_title', '')
-                else:
-                    lbl = post.get('short_url', '')
-                img = __imgtumblr__
-                if post.get('thumbnail_url', ''):
-                    img = post.get('thumbnail_url', '')
-                if post.get('video_url', '') is not None:
-                    vidurl = post.get('video_url', '')
-            except:
-                lbl = ""
-                lbl2 = post.get(post.keys()[1])
-            litem = ListItem(label=lbl, label2=lbl2, icon=img, thumbnail=img, path=vidurl)
-            litem.playable = True
-            litem.is_folder = False
-            if post.get('date', '') is not None:
-                rdate = str(post.get('date', '')).split(' ', 1)[0].strip()
-            litem.set_info(info_type='video', info_labels={'Date': rdate})
-            litems.append(litem)
+        lbl2 = post.get('blog_name', '')
+        lbl = post.get('slug', '').replace('-', ' ')
+        img = post.get('thumbnail_url', __imgtumblr__)
+        alltags.extend(post.get('tags', []))
+        try:
+            if post.get('slug', '') is not None:
+                lbl = post.get('slug', '').replace('-', ' ')
+            if len(post.get('caption', '')) > 0:
+                lbl = Strip(post.get('caption', ''))
+            elif len(post.get('summary', '')) > 0:
+                lbl = post.get('summary', '')
+            elif len(post.get('source_title', '')) > 0:
+                lbl = post.get('source_title', '')
+            else:
+                lbl = post.get('short_url', '')
+            if post.get('thumbnail_url', ''):
+                img = post.get('thumbnail_url', '')
+            if post.get('video_url', '') is not None:
+                vidurl = post.get('video_url', '')
+        except:
+            plugin.notify(str(repr(post)))
+        litem = ListItem(label=lbl, label2=lbl2, icon=img, thumbnail=img, path=vidurl)
+        litem.playable = True
+        litem.is_folder = False
+        if len(post.get('date', '')) > 0:
+            rdate = str(post.get('date', '')).split(' ', 1)[0].strip()
+        litem.set_info(info_type='video', info_labels={'Date': rdate, 'Duration': post.get('duration', '')})
+        litem.set_art({'poster': img, 'thumbnail': img, 'fanart': img})
+        pathdl = plugin.url_for(endpoint=download, urlvideo=vidurl)
+        pathaddlike = plugin.url_for(endpoint=addlike, id=post.get('id', ''))
+        litem.add_context_menu_items(
+            [('Download', 'RunPlugin({0})'.format(pathdl)), ('Like', 'RunPlugin({0})'.format(pathaddlike)), ])
+        litems.append(litem)
+    savetags(alltags)
     return litems
 
 

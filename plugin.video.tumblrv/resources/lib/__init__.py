@@ -4,11 +4,10 @@ from pytumblr import TumblrRestClient
 TUMBLRAPI = {'site': 'http://www.tumblr.com', 'request_token_url': "http://www.tumblr.com/oauth/request_token",
              'authorize_url': "http://www.tumblr.com/oauth/authorize", 'token_url': "http://www.tumblr.com/oauth/access_token",
              'callback_url': 'https://127.0.0.1/callback'}
-
-TUMBLRAUTH = {'consumer_key': '5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4',
-          'consumer_secret': 'GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch',
-          'oauth_token': '',
-          'oauth_secret': ''}
+TUMBLRAUTH = dict(consumer_key='5wEwFCF0rbiHXYZQQeQnNetuwZMmIyrUxIePLqUMcZlheVXwc4',
+                     consumer_secret='GCLMI2LnMZqO2b5QheRvUSYY51Ujk7nWG2sYroqozW06x4hWch',
+                     oauth_token='',
+                     oauth_secret='')
 
 def makenonce():
     random_number = ''.join( str( random.randint( 0, 9 ) ) for _ in range( 40 ) )
